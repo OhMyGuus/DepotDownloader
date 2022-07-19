@@ -11,16 +11,17 @@ using SteamKit2;
 
 namespace DepotDownloader
 {
-    class Program
+    public class Program
     {
         static int Main(string[] args)
             => MainAsync(args).GetAwaiter().GetResult();
 
-        static async Task<int> MainAsync(string[] args)
+        public static async Task<int> MainAsync(string[] args)
         {
             if (args.Length == 0)
             {
                 PrintUsage();
+
                 return 1;
             }
 
@@ -94,7 +95,8 @@ namespace DepotDownloader
 
             ContentDownloader.Config.InstallDirectory = GetParameter<string>(args, "-dir");
 
-            ContentDownloader.Config.VerifyAll = HasParameter(args, "-verify-all") || HasParameter(args, "-verify_all") || HasParameter(args, "-validate");
+            ContentDownloader.Config.VerifyAll = HasParameter(args, "-verify-all") || HasParameter(args, "-verify_all") ||
+                                                 HasParameter(args, "-validate");
             ContentDownloader.Config.MaxServers = GetParameter(args, "-max-servers", 20);
             ContentDownloader.Config.MaxDownloads = GetParameter(args, "-max-downloads", 8);
             ContentDownloader.Config.MaxServers = Math.Max(ContentDownloader.Config.MaxServers, ContentDownloader.Config.MaxDownloads);
@@ -106,6 +108,7 @@ namespace DepotDownloader
             if (appId == ContentDownloader.INVALID_APP_ID)
             {
                 Console.WriteLine("Error: -app not specified!");
+
                 return 1;
             }
 
@@ -126,11 +129,13 @@ namespace DepotDownloader
                         || ex is OperationCanceledException)
                     {
                         Console.WriteLine(ex.Message);
+
                         return 1;
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("Download failed to due to an unhandled exception: {0}", e.Message);
+
                         throw;
                     }
                     finally
@@ -141,6 +146,7 @@ namespace DepotDownloader
                 else
                 {
                     Console.WriteLine("Error: InitializeSteam failed");
+
                     return 1;
                 }
 
@@ -161,11 +167,13 @@ namespace DepotDownloader
                         || ex is OperationCanceledException)
                     {
                         Console.WriteLine(ex.Message);
+
                         return 1;
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("Download failed to due to an unhandled exception: {0}", e.Message);
+
                         throw;
                     }
                     finally
@@ -176,6 +184,7 @@ namespace DepotDownloader
                 else
                 {
                     Console.WriteLine("Error: InitializeSteam failed");
+
                     return 1;
                 }
 
@@ -185,7 +194,8 @@ namespace DepotDownloader
             {
                 #region App downloading
 
-                var branch = GetParameter<string>(args, "-branch") ?? GetParameter<string>(args, "-beta") ?? ContentDownloader.DEFAULT_BRANCH;
+                var branch = GetParameter<string>(args, "-branch") ??
+                             GetParameter<string>(args, "-beta") ?? ContentDownloader.DEFAULT_BRANCH;
                 ContentDownloader.Config.BetaPassword = GetParameter<string>(args, "-betapassword");
 
                 ContentDownloader.Config.DownloadAllPlatforms = HasParameter(args, "-all-platforms");
@@ -194,6 +204,7 @@ namespace DepotDownloader
                 if (ContentDownloader.Config.DownloadAllPlatforms && !String.IsNullOrEmpty(os))
                 {
                     Console.WriteLine("Error: Cannot specify -os when -all-platforms is specified.");
+
                     return 1;
                 }
 
@@ -205,6 +216,7 @@ namespace DepotDownloader
                 if (ContentDownloader.Config.DownloadAllLanguages && !String.IsNullOrEmpty(language))
                 {
                     Console.WriteLine("Error: Cannot specify -language when -all-languages is specified.");
+
                     return 1;
                 }
 
@@ -220,6 +232,7 @@ namespace DepotDownloader
                     if (depotIdList.Count != manifestIdList.Count)
                     {
                         Console.WriteLine("Error: -manifest requires one id for every -depot specified");
+
                         return 1;
                     }
 
@@ -235,18 +248,21 @@ namespace DepotDownloader
                 {
                     try
                     {
-                        await ContentDownloader.DownloadAppAsync(appId, depotManifestIds, branch, os, arch, language, lv, isUGC).ConfigureAwait(false);
+                        await ContentDownloader.DownloadAppAsync(appId, depotManifestIds, branch, os, arch, language, lv, isUGC)
+                            .ConfigureAwait(false);
                     }
                     catch (Exception ex) when (
                         ex is ContentDownloaderException
                         || ex is OperationCanceledException)
                     {
                         Console.WriteLine(ex.Message);
+
                         return 1;
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("Download failed to due to an unhandled exception: {0}", e.Message);
+
                         throw;
                     }
                     finally
@@ -257,6 +273,7 @@ namespace DepotDownloader
                 else
                 {
                     Console.WriteLine("Error: InitializeSteam failed");
+
                     return 1;
                 }
 
@@ -266,9 +283,10 @@ namespace DepotDownloader
             return 0;
         }
 
-        static bool InitializeSteam(string username, string password)
+        public static bool InitializeSteam(string username, string password)
         {
-            if (username != null && password == null && (!ContentDownloader.Config.RememberPassword || !AccountSettingsStore.Instance.LoginKeys.ContainsKey(username)))
+            if (username != null && password == null && (!ContentDownloader.Config.RememberPassword ||
+                                                         !AccountSettingsStore.Instance.LoginKeys.ContainsKey(username)))
             {
                 do
                 {
@@ -374,12 +392,15 @@ namespace DepotDownloader
             Console.WriteLine("Parameters:");
             Console.WriteLine("\t-app <#>\t\t\t\t- the AppID to download.");
             Console.WriteLine("\t-depot <#>\t\t\t\t- the DepotID to download.");
-            Console.WriteLine("\t-manifest <id>\t\t\t- manifest id of content to download (requires -depot, default: current for branch).");
+            Console.WriteLine(
+                "\t-manifest <id>\t\t\t- manifest id of content to download (requires -depot, default: current for branch).");
             Console.WriteLine("\t-beta <branchname>\t\t\t- download from specified branch if available (default: Public).");
             Console.WriteLine("\t-betapassword <pass>\t\t- branch password if applicable.");
             Console.WriteLine("\t-all-platforms\t\t\t- downloads all platform-specific depots when -app is used.");
-            Console.WriteLine("\t-os <os>\t\t\t\t- the operating system for which to download the game (windows, macos or linux, default: OS the program is currently running on)");
-            Console.WriteLine("\t-osarch <arch>\t\t\t\t- the architecture for which to download the game (32 or 64, default: the host's architecture)");
+            Console.WriteLine(
+                "\t-os <os>\t\t\t\t- the operating system for which to download the game (windows, macos or linux, default: OS the program is currently running on)");
+            Console.WriteLine(
+                "\t-osarch <arch>\t\t\t\t- the architecture for which to download the game (32 or 64, default: the host's architecture)");
             Console.WriteLine("\t-all-languages\t\t\t\t- download all language-specific depots when -app is used.");
             Console.WriteLine("\t-language <lang>\t\t\t\t- the language for which to download the game (default: english)");
             Console.WriteLine("\t-lowviolence\t\t\t\t- download low violence depots when -app is used.");
@@ -389,17 +410,20 @@ namespace DepotDownloader
             Console.WriteLine();
             Console.WriteLine("\t-username <user>\t\t- the username of the account to login to for restricted content.");
             Console.WriteLine("\t-password <pass>\t\t- the password of the account to login to for restricted content.");
-            Console.WriteLine("\t-remember-password\t\t- if set, remember the password for subsequent logins of this user. (Use -username <username> -remember-password as login credentials)");
+            Console.WriteLine(
+                "\t-remember-password\t\t- if set, remember the password for subsequent logins of this user. (Use -username <username> -remember-password as login credentials)");
             Console.WriteLine();
             Console.WriteLine("\t-dir <installdir>\t\t- the directory in which to place downloaded files.");
-            Console.WriteLine("\t-filelist <file.txt>\t- a list of files to download (from the manifest). Prefix file path with 'regex:' if you want to match with regex.");
+            Console.WriteLine(
+                "\t-filelist <file.txt>\t- a list of files to download (from the manifest). Prefix file path with 'regex:' if you want to match with regex.");
             Console.WriteLine("\t-validate\t\t\t\t- Include checksum verification of files already downloaded");
             Console.WriteLine();
             Console.WriteLine("\t-manifest-only\t\t\t- downloads a human readable manifest for any depots that would be downloaded.");
             Console.WriteLine("\t-cellid <#>\t\t\t\t- the overridden CellID of the content server to download from.");
             Console.WriteLine("\t-max-servers <#>\t\t- maximum number of content servers to use. (default: 20).");
             Console.WriteLine("\t-max-downloads <#>\t\t- maximum number of chunks to download concurrently. (default: 8).");
-            Console.WriteLine("\t-loginid <#>\t\t- a unique 32-bit integer Steam LogonID in decimal, required if running multiple instances of DepotDownloader concurrently.");
+            Console.WriteLine(
+                "\t-loginid <#>\t\t- a unique 32-bit integer Steam LogonID in decimal, required if running multiple instances of DepotDownloader concurrently.");
         }
     }
 }
